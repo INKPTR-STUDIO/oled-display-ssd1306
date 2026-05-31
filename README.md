@@ -5,6 +5,7 @@
 -->
 # 仓库施工中，内容未完成，晚些再来吧...
 # Repository under construction – content not yet complete. Please check back later...
+![What's the fox doing?](https://raw.githubusercontent.com/INKPTR-STUDIO/oled-display-ssd1306/main/images/酒狐与曲柄.gif)
 <!--
 # 简述（Brief description）
 - 本文将为大家讲解基本的器件工作环境搭建和通信驱动方法，并附上基本的驱动代码以便快速使用。
