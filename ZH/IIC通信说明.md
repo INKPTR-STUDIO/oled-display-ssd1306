@@ -99,7 +99,7 @@ void IIC_Stop(void) {
 代码形式参考：
 ```C++
 void IIC_SendACK(u8 ACK) {
-    SDA = (ACK)? 1:0;   // <-- 这样写是因为用的是 ACK 的真值，即只看 ACK = 0 或 ACK ≠ 0。直接的 SDA = ACK 写法不适配或可能导致引脚寄存器工作异常，尤其是 ACK > 1 时，同下
+    SDA = (ACK)? 1 : 0;   // <-- 这样写是因为用的是 ACK 的真值，即只看 ACK = 0 或 ACK ≠ 0。直接的 SDA = ACK 写法不适配或可能导致引脚寄存器工作异常，尤其是 ACK > 1 时，同下
     SCL = 1;
     SCL = 0;
 }
@@ -156,10 +156,10 @@ void IIC_SendByte(u8 Byte) {
     u8 i;
 
     for(i = 0 ; i < 8 ; i++) {
-        SDA = (Byte&0x80)? 1:0;
+        SDA = (Byte & 0x80)? 1 : 0;
         SCL = 1;
         SCL = 0;
-        Byte = Byte<<1;
+        Byte = Byte << 1;
     }
 }
 ```
@@ -188,7 +188,7 @@ u8 IIC_ReceiveByte(void) {
 
     SDA = 1;
     for(i = 0 ; i < 8 ; i++) {
-        Byte = Byte<<1;
+        Byte = Byte << 1;
         SCL = 1;
         Byte |= 0x01;
         SCL = 0;
@@ -212,7 +212,7 @@ u8 IIC_ReceiveByte(void) {
 
 ## 3.2 关于接收应答
 这是主机最被动的时序，连续通信须等待从机内部完成工作后给出响应，否则从机无法继续；选择等待从机响应的话，假如从机故障或实际上并没有连接，主机进程又会在漫长的等待中卡死。
-<br>可以设定一个最大等待时间，如果从机在超时前响应，那么通信继续；否则不再继续，执行报错流程。这里的超时判定通过延时+轮询实现，那么可以改善相应的代码形式参考：
+<br>可以设定一个最大等待时间，如果从机在超时前响应，那么通信继续；否则不再继续。这里的超时判定通过延时+轮询实现，那么可以改善相应的代码形式参考：
 ```C++
 u8 IIC_ReceiveACK(void) {
     u8 ACK, TimeOut=200;    // <-- 此处 TimeOut 的初始值可以根据需要更改
@@ -223,7 +223,7 @@ u8 IIC_ReceiveACK(void) {
         ACK = SDA;
         if(!ACK) {break;}   // <-- 这里以应答（ACK = 0）作为从机就绪的标志
 
-        // 此处可以添加延时函数，但延时过长会严重影响通信速度，建议综合下文完善通信速度的细节后，再决定要不要加延时以及加多少
+        // 此处可以添加延时函数，但延时过长会严重影响通信速度。以本代码为例，假设此处延时 10us，那么代码实际上会每隔 10us 检查一次 SDA，若有应答则提前跳出轮询的循环，函数最后会返回应答（返回 0）；否则轮询循环会在 200 次轮询后结束，超时时间一共为 200 * 10us = 2ms，函数最后会返回不应答（返回 1）
 
     }
     SCL = 0;
@@ -235,9 +235,105 @@ u8 IIC_ReceiveACK(void) {
 
 
 ## 3.3 关于通信速度
+受器件接口和布线等原因附带的 RC 特性影响，总线上的电平被主机或从机翻转后，需要一定的时间才能稳定，从机的逻辑处理单元对于信号的处理速度也有上限，两者是限制 IIC 通信速度的主要因素。为了使通信在足够快速的同时保证可靠性，在布线尽量短、保护总线尽量不受电磁干扰、依据总线挂载情况选择合适上拉电阻的同时，还需要从单片机程序中主动限制单片机的引脚操作速度。
+<br>以绝大多数器件支持的标准模式 100kHz 为例，可以在每次编辑引脚电平的代码后延时 10us。那么代码形式参考中可以封装引脚函数：
+```C++
+void IIC_Delay10us(void) {
+    // 10us 延时代码
+}
 
+void IIC_EditSCL(u8 Dat) {
+    SCL = (Dat)? 1 : 0;
+    IIC_Delay10us();
+}
+
+void IIC_EditSDA(u8 Dat) {
+    SDA = (Dat)? 1 : 0;
+    IIC_Delay10us();
+}
+```
 <br>
 
 
 
 ## 3.4 最终代码形式参考
+```C++
+// 电平翻转速度控制延时函数
+void IIC_Delay10us(void) {
+    // 10us 延时代码
+}
+
+
+
+// 翻转速度控制引脚封装
+void IIC_EditSCL(u8 Dat) {
+    SCL = (Dat)? 1 : 0;
+    IIC_Delay10us();
+}
+void IIC_EditSDA(u8 Dat) {
+    SDA = (Dat)? 1 : 0;
+    IIC_Delay10us();
+}
+
+
+
+// 起始信号
+void IIC_Start(void) {
+    IIC_EditSDA(1);
+    IIC_EditSCL(1);
+    IIC_EditSDA(0);
+    IIC_EditSCL(0);
+}
+
+// 终止信号
+void IIC_Stop(void) {
+    IIC_EditSCL(0);
+    IIC_EditSDA(0);
+    IIC_EditSCL(1);
+    IIC_EditSDA(1);
+}
+
+// 发送应答
+void IIC_SendACK(u8 ACK) {
+    IIC_EditSDA(ACK);
+    IIC_EditSCL(1);
+    IIC_EditSCL(0);
+}
+
+// 接收应答
+u8 IIC_ReceiveACK(void) {
+    u8 ACK;
+
+    IIC_EditSDA(1);
+    IIC_EditSCL(1);
+    ACK = SDA;
+    IIC_EditSCL(0);
+    return ACK;
+}
+
+// 发送字节
+void IIC_SendByte(u8 Byte) {
+    u8 i;
+
+    for(i = 0 ; i < 8 ; i++) {
+        IIC_EditSDA(Byte & 0x80);
+        IIC_EditSCL(1);
+        IIC_EditSCL(0);
+        Byte = Byte << 1;
+    }
+}
+
+// 接收字节
+u8 IIC_ReceiveByte(void) {
+    u8 i, Byte=0x00;
+
+    IIC_EditSDA(1);
+    for(i = 0 ; i < 8 ; i++) {
+        Byte = Byte << 1;
+        IIC_EditSCL(1);
+        if(SDA) {Byte |= 0x01;}
+        IIC_EditSCL(0);
+    }
+    return Byte;
+}
+```
