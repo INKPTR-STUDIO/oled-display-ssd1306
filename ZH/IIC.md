@@ -98,7 +98,7 @@ void IIC_Stop(void) {
 
 代码形式参考：
 ```C++
-void IIC_SendACK(u8 ACK) {
+void IIC_SendACK(u8 ACK) {    // <-- u8 即 unsigned char，同下
     if(ACK) {SDA = 1;}  // <-- 这样写是因为用的是 ACK 的真值，即只看 ACK = 0 或 ACK ≠ 0。直接的 SDA = ACK 写法不适配或可能导致引脚寄存器工作异常，尤其是 ACK > 1 时，同下
     else {SDA = 0;}
     SCL = 1;
