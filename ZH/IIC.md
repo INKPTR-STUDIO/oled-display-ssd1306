@@ -263,14 +263,14 @@ void IIC_EditSDA(u8 Dat) {
 
 ## 3.4 最终代码形式参考
 ```C++
-// 电平翻转速度控制延时函数
+// 控制电平翻转速度的延时函数
 void IIC_Delay10us(void) {
     // 10us 延时代码
 }
 
 
 
-// 翻转速度控制引脚封装
+// 电平控制封装函数
 void IIC_EditSCL(u8 Dat) {
     if(Dat) {SCL = 1;}
     else {SCL = 0;}
