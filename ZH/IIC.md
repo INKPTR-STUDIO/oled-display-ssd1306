@@ -15,7 +15,7 @@ IIC 数据线有两条：
 <br>（2）数据线 SDA
 <br>总线通过并联的形式挂载多个从机。对于 SCL，在多数应用中，从机不主动控制 SCL，但 IIC 规范允许从机将 SCL 拉低让主机等待。本文暂不讨论，则从机始终为高阻态，只有主机通过发送低电平脉冲向各个从机提供同步信号；对于 SDA，发送的一方可选择拉低电平或以高阻态释放该线为高电平，接收的一方则保持高阻态以读取电平状态。因此 SCL 上只有主机发出的单向信号，SDA 上为双向信号。
 <br>SCL、SDA 均为开漏结构，建议在这两根数据线上分别加入上拉电阻，稳定两个引脚被释放时的高电平，同时以合适的阻值限制流入芯片的电流大小。（3.3V-5V供电的一般使用场景中，推荐使用4.7kΩ）
-<br>![IIC_Bus](https://github.com/INKPTR-STUDIO/oled-display-ssd1306/blob/main/Images/IIC_Bus.png)
+<br>![IIC_Bus](https://github.com/INKPTR-STUDIO/MCU-BusBase/blob/main/Images/IIC_Bus.png)
 <br><br><br>
 
 
@@ -29,7 +29,7 @@ IIC 数据线有两条：
 - SCL 高电平期间，SDA 出现电平翻转视为起始或终止指令。SDA 出现下降沿即起始指令，SDA 出现上升沿即终止指令。（其实此处的起始和终止指令，就是下文所述的起始和终止信号时序）
 
 以上几种电平逻辑又组合成 6 种时序：起始信号、终止信号、发送应答、接收应答、发送字节、接收字节。按器件的通信要求，将所需的时序组合起来，即可实现 IIC 通信。时序细节将在下文展开讲解。
-<br>![IIC_Timing](https://github.com/INKPTR-STUDIO/oled-display-ssd1306/blob/main/Images/IIC_Timing.png)
+<br>![IIC_Timing](https://github.com/INKPTR-STUDIO/MCU-BusBase/blob/main/Images/IIC_Timing.png)
 <br>
 
 
