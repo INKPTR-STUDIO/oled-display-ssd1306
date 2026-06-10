@@ -99,7 +99,7 @@ void SPI_Start(void) {
 <br>
 代码形式参考：
 ```C++
-void SPI_Start(void) {
+void SPI_Stop(void) {
     CS = 1;
 }
 ```
